@@ -34,7 +34,8 @@ class Program
         Console.WriteLine("5. Exibir Todas as Tarefas");
         Console.WriteLine("6. Exibir Todas as Tarefas Concluídas");
         Console.WriteLine("7. Exibir Todas as Tarefas Pendentes");
-        Console.WriteLine("8. Marcar ou Desmarcar Tarefa");
+        Console.WriteLine("8. Pesquisar Tarefa");
+        Console.WriteLine("9. Marcar ou Desmarcar Tarefa");
         Console.WriteLine("0. Sair e Salvar Dados");
         Console.WriteLine("====================================");
         Console.ForegroundColor = ConsoleColor.White;
@@ -82,7 +83,7 @@ class Program
 
                     case 5:
                         // Exibir Todas as Tarefas
-                        Console.WriteLine("TODAS AS TAREFAS");                
+                        Console.WriteLine("TODAS AS TAREFAS");
                         taskManager.ShowAllTasks();
                         break;
                     case 6:
@@ -94,8 +95,12 @@ class Program
                         // Exibir Todas as Tarefas Pendentes
                         taskManager.ShowPendingTasks();
                         break;
-
                     case 8:
+                        // Pesquisar Tarefa
+                        taskManager.SearchTask();
+                        break;
+
+                    case 9:
                         // Marcar ou Desmarcar Tarefa
                         Console.WriteLine("SELECIONE A TAREFA DESEJADA");
                         taskManager.ToggleTask();
@@ -115,7 +120,7 @@ class Program
             {
                 Console.WriteLine("Entrada inválida. Tente novamente.");
             }
-            Console.WriteLine();                        
+            Console.WriteLine();
             Console.WriteLine(); // Adicionar duas linhas em branco para melhor legibilidade
         } while (choice != 0);
 
@@ -287,15 +292,16 @@ class Manager
             switch (removeChoice)
             {
                 case 1:
+                    // Deletar task pelo título
                     Console.Write("Título: ");
                     string title = Console.ReadLine();
-                    RemoveTask(title);
+                    tasks.RemoveAll(task => string.Equals(title, task.GetTitle(), StringComparison.OrdinalIgnoreCase));
                     break;
                 case 2:
-                    Console.Write("ID: ");
-                    int id;
-                    if (int.TryParse(Console.ReadLine(), out id))
-                        RemoveTask(id);
+                    // Deletar task pelo ID
+                    int id = 0;
+                    Task taskToRemove = GetTaskById(id);
+                    tasks.Remove(taskToRemove);
                     break;
                 case 0:
                     return;
@@ -303,22 +309,30 @@ class Manager
         }
     }
 
-    // Deletar task pelo título
-    public void RemoveTask(string title)
+    public void SearchTask()
     {
-        tasks.RemoveAll(task => string.Equals(title, task.GetTitle(), StringComparison.OrdinalIgnoreCase));
+        Console.Write("Busca: ");
+        string search = Console.ReadLine();
+        List<Task> tasksSearched = GetTaskBySearch(search);
+
+        Console.WriteLine();
+        if (tasksSearched.Any())
+        {
+            foreach (var item in tasksSearched)
+            {
+                Console.WriteLine(item);
+                Console.WriteLine();
+            }
+        }
     }
 
-    // Deletar task pelo ID
-    public void RemoveTask(int id) { tasks.RemoveAll(task => id == task.GetId()); }
-
-    // Pesquisar task pelo título ou pela descrição
-    public List<Task> SearchTask(string search)
+    // Retornar tasks encontradas pelo título ou pela descrição
+    public List<Task> GetTaskBySearch(string search)
     {
         List<Task> tasksSearched = new List<Task>();
         foreach (var task in tasks)
         {
-            if (task.GetTitle().Contains(search) || task.GetDescription().Contains(search))
+            if (task.GetTitle().Contains(search, StringComparison.OrdinalIgnoreCase) || task.GetDescription().Contains(search, StringComparison.OrdinalIgnoreCase))
                 tasksSearched.Add(task);
         }
 
@@ -382,6 +396,7 @@ class Manager
 
     public void ShowConcludedTasks()
     {
+        bool concludedTasksIsEmpty = true;
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("TAREFAS CONCLUÍDAS");
         Console.ForegroundColor = ConsoleColor.White;
@@ -390,13 +405,18 @@ class Manager
             if (task.IsConcluded())
             {
                 Console.WriteLine(task.ToString());
+                concludedTasksIsEmpty = false;
                 Console.WriteLine();
             }
         }
+        if (concludedTasksIsEmpty)
+            Console.WriteLine("Não há tarefas concluídas.");
+        Console.WriteLine();
     }
 
     public void ShowPendingTasks()
     {
+        bool pendingTasksIsEmpty = true;
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("TAREFAS PENDENTES");
         Console.ForegroundColor = ConsoleColor.White;
@@ -405,9 +425,13 @@ class Manager
             if (!task.IsConcluded())
             {
                 Console.WriteLine(task.ToString());
+                pendingTasksIsEmpty = false;
                 Console.WriteLine();
             }
         }
+        if (pendingTasksIsEmpty)
+            Console.WriteLine("Não há tarefas pendentes.");
+        Console.WriteLine();
     }
 
     public void ShowAllTasks()
@@ -566,27 +590,22 @@ class Task
         this.timeCreated = DateTime.Now;
     }
 
-    public void ToggleSituation()
-    {
-        situation = !situation;
-    }
+    public void ToggleSituation() { situation = !situation; }
 
-    public void ToggleSituation(bool situation)
-    {
-        this.situation = situation;
-    }
+    public void ToggleSituation(bool situation) { this.situation = situation; }
 
-
+    // Override object.ToString()
     public override string ToString()
     {
         return $"ID: {id} {Environment.NewLine}" +
                $"Título: {title} {Environment.NewLine}" +
                $"Descrição: {description} {Environment.NewLine}" +
-               $"Situação: {(situation ? "concluída" : "pendente")} {Environment.NewLine}" +
+               $"Situação: {(situation ? "concluído" : "pendente")} {Environment.NewLine}" +
                $"Data criada: {timeCreated.ToString()} {Environment.NewLine}" +
                $"Vencimento: {dateLimit.Date.ToString()}";
     }
 
+    // Getters e setters
     public int GetId() { return id; }
     public string GetTitle() { return title; }
     public string GetDescription() { return description; }
