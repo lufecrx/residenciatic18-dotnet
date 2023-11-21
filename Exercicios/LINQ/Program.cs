@@ -7,6 +7,15 @@
     return (name, age);
 }
 
-var getData = GetAge("Luiz", new DateTime(2003, 7, 6));
-Console.WriteLine($"{getData.Item1} tem {getData.Item2} anos.");
+Console.WriteLine("Nome: ");
+string name = Console.ReadLine();
+
+Console.WriteLine("Data de nascimento: ");
+DateTime birthDate;
+
+if(DateTime.TryParse(Console.ReadLine(), out birthDate)){
+    var getData = GetAge(name, birthDate);
+    Console.WriteLine($"{getData.Item1} tem {getData.Item2} anos.");    
+}
+
 #endregion
